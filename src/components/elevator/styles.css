@@ -242,8 +242,8 @@ button.btn-floor:disabled.active {
     radial-gradient(circle farthest-corner at center, grey, #8a8a8a);
   background-size: 7px 7px, 7px 7px, 100% 100%;
   background-position: 1px 1px, 0px 0px, center center;
-  transition: width 0.5s ease-in-out;
-  /* Smoother door transition */
+  transition: width 0.3s ease-in-out;
+  /* Slightly faster door transition */
 }
 
 .elevator-container .elevator-light {

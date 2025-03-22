@@ -80,6 +80,24 @@ export const elevatorMachine = setup({
     ensureClosedDoors: assign({
       doorWidth: () => 34, // Ensure doors are fully closed when moving
     }),
+    resetDoorClosedWaitingTime: assign({
+      doorClosedWaitingTime: () => 500, // 500ms delay after door closes before moving
+    }),
+    decreaseDoorClosedWaitingTime: assign({
+      doorClosedWaitingTime: ({ context, event }) =>
+        event.type === "TICK"
+          ? Math.max(0, context.doorClosedWaitingTime - event.deltaTime)
+          : context.doorClosedWaitingTime,
+    }),
+    resetArrivedWaitingTime: assign({
+      arrivedWaitingTime: () => 500, // 500ms delay after elevator arrives before opening door
+    }),
+    decreaseArrivedWaitingTime: assign({
+      arrivedWaitingTime: ({ context, event }) =>
+        event.type === "TICK"
+          ? Math.max(0, context.arrivedWaitingTime - event.deltaTime)
+          : context.arrivedWaitingTime,
+    }),
   },
   guards: {
     isDoorFullyOpen: ({ context }) => context.doorWidth <= 1,
@@ -92,6 +110,9 @@ export const elevatorMachine = setup({
       );
     },
     isWaitTimeElapsed: ({ context }) => context.elevatorWaitingTime <= 0,
+    isDoorClosedWaitTimeElapsed: ({ context }) =>
+      context.doorClosedWaitingTime <= 0,
+    isArrivedWaitTimeElapsed: ({ context }) => context.arrivedWaitingTime <= 0,
   },
 }).createMachine({
   context: {
@@ -100,6 +121,8 @@ export const elevatorMachine = setup({
     destinyFloors: [],
     doorWidth: 1, // Fully open
     elevatorWaitingTime: 2000,
+    doorClosedWaitingTime: 500, // 500ms delay after door closes
+    arrivedWaitingTime: 500, // 500ms delay after elevator stops
     floorNames: [
       "Lobby",
       "1st Floor",
@@ -172,8 +195,25 @@ export const elevatorMachine = setup({
       always: [
         {
           guard: "isDoorFullyClosed",
+          target: "doorClosed",
+          actions: ["ensureClosedDoors", "resetDoorClosedWaitingTime"],
+        },
+      ],
+    },
+    doorClosed: {
+      // New state to ensure a visual delay after doors close
+      on: {
+        TICK: {
+          actions: "decreaseDoorClosedWaitingTime",
+        },
+        SELECT_FLOOR: {
+          actions: "addDestinyFloor",
+        },
+      },
+      always: [
+        {
+          guard: "isDoorClosedWaitTimeElapsed",
           target: "moving",
-          actions: "ensureClosedDoors", // Ensure doors are fully closed before transitioning
         },
       ],
     },
@@ -190,8 +230,25 @@ export const elevatorMachine = setup({
       always: [
         {
           guard: "hasReachedTargetFloor",
+          target: "arrived",
+          actions: ["removeCurrentFloorFromDestiny", "resetArrivedWaitingTime"],
+        },
+      ],
+    },
+    arrived: {
+      // New state to wait after arriving before opening doors
+      on: {
+        TICK: {
+          actions: "decreaseArrivedWaitingTime",
+        },
+        SELECT_FLOOR: {
+          actions: "addDestinyFloor",
+        },
+      },
+      always: [
+        {
+          guard: "isArrivedWaitTimeElapsed",
           target: "opening",
-          actions: "removeCurrentFloorFromDestiny",
         },
       ],
     },
