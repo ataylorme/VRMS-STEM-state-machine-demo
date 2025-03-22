@@ -31,9 +31,9 @@ export default function ElevatorComponent() {
 
     const nextFloor = state.context.destinyFloors[0];
     if (nextFloor > state.context.currentFloor) {
-      return "Subindo";
+      return "Going Up";
     }
-    return "Descendo";
+    return "Going Down";
   };
 
   // Calculate elevator top position (simplified)
@@ -60,7 +60,7 @@ export default function ElevatorComponent() {
               className={`btn-floor ${state.context.destinyFloors.includes(0) ? "active" : ""}`}
               onClick={() => handleFloorSelection(0)}
             >
-              T
+              L
             </button>
           </div>
           {[1, 2, 3, 4, 5, 6].map((floor) => (
