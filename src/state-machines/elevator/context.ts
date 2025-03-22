@@ -5,4 +5,5 @@ export interface ElevatorContext {
   doorWidth: number;
   elevatorWaitingTime: number;
   floorNames: string[];
+  moveCounter: number; // Added counter to control movement speed
 }

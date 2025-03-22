@@ -96,6 +96,19 @@ button.btn-floor.active {
   border-color: green;
 }
 
+button.btn-floor:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #999;
+  background: #ddd;
+}
+
+button.btn-floor:disabled.active {
+  background: #aaeeaa;
+  color: #99cc99;
+  border-color: #88aa88;
+}
+
 .building {
   width: 300px;
   position: relative;
@@ -214,7 +227,8 @@ button.btn-floor.active {
   border: 3px solid #333;
   border-top-width: 10px;
   position: absolute;
-  transition: top 0.5s ease;
+  transition: top 1s ease;
+  /* Changed from 0.5s to 1s to double transition time */
 }
 
 .elevator-container .elevator-door {
@@ -228,7 +242,8 @@ button.btn-floor.active {
     radial-gradient(circle farthest-corner at center, grey, #8a8a8a);
   background-size: 7px 7px, 7px 7px, 100% 100%;
   background-position: 1px 1px, 0px 0px, center center;
-  transition: width 0.3s ease;
+  transition: width 0.5s ease-in-out;
+  /* Smoother door transition */
 }
 
 .elevator-container .elevator-light {

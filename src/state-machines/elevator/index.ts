@@ -49,11 +49,17 @@ export const elevatorMachine = setup({
         const targetFloor = context.destinyFloors[0];
         if (targetFloor === context.currentFloor) return context.currentFloor;
 
-        // Move towards the target floor gradually (simplified in this implementation)
+        // Move towards the target floor more gradually (half the speed)
+        // Using a counter to only move every other TICK
+        if (context.moveCounter < 1) {
+          return context.currentFloor; // Don't move this tick
+        }
+
         return context.currentFloor < targetFloor
-          ? context.currentFloor + 1
-          : context.currentFloor - 1;
+          ? context.currentFloor + 0.5 // Move at half speed up
+          : context.currentFloor - 0.5; // Move at half speed down
       },
+      moveCounter: ({ context }) => (context.moveCounter + 1) % 2,
     }),
     removeCurrentFloorFromDestiny: assign({
       destinyFloors: ({ context }) =>
@@ -67,6 +73,12 @@ export const elevatorMachine = setup({
     }),
     resetWaitingTime: assign({
       elevatorWaitingTime: () => 2000,
+    }),
+    resetDoorStateOnIdle: assign({
+      doorWidth: () => 1, // Fully open when idle
+    }),
+    ensureClosedDoors: assign({
+      doorWidth: () => 34, // Ensure doors are fully closed when moving
     }),
   },
   guards: {
@@ -97,6 +109,7 @@ export const elevatorMachine = setup({
       "5th Floor",
       "6th Floor",
     ],
+    moveCounter: 0, // Counter to slow down movement
   },
   initial: "idle",
   on: {
@@ -112,6 +125,7 @@ export const elevatorMachine = setup({
   },
   states: {
     idle: {
+      entry: "resetDoorStateOnIdle",
       on: {
         SELECT_FLOOR: {
           target: "closing",
@@ -138,6 +152,9 @@ export const elevatorMachine = setup({
         TICK: {
           actions: "decreaseWaitingTime",
         },
+        SELECT_FLOOR: {
+          actions: "addDestinyFloor",
+        },
       },
       always: [
         {
@@ -156,13 +173,18 @@ export const elevatorMachine = setup({
         {
           guard: "isDoorFullyClosed",
           target: "moving",
+          actions: "ensureClosedDoors", // Ensure doors are fully closed before transitioning
         },
       ],
     },
     moving: {
+      entry: "ensureClosedDoors", // Double-ensure doors are closed when entering
       on: {
         TICK: {
           actions: "moveElevator",
+        },
+        SELECT_FLOOR: {
+          actions: "addDestinyFloor",
         },
       },
       always: [

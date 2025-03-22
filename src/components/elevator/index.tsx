@@ -40,9 +40,20 @@ export default function ElevatorComponent() {
   const getElevatorStyle = () => {
     // Map floor number to position (simplification)
     const floorHeight = 65; // approximate height per floor
+
+    // Use actual current floor value (which may be decimal during transition) for positioning
     const top = 395 - state.context.currentFloor * floorHeight;
     return { top: `${top}px` };
   };
+
+  // Get current floor for display
+  const getCurrentFloorName = () => {
+    const floorIndex = Math.round(state.context.currentFloor);
+    return state.context.floorNames[floorIndex];
+  };
+
+  // Get current floor index as integer for button disabling
+  const getCurrentFloorIndex = () => Math.round(state.context.currentFloor);
 
   const directionText = getDirectionText();
 
@@ -50,7 +61,7 @@ export default function ElevatorComponent() {
     <div className="elevator-demo">
       <div className="handle">
         <div className="display">
-          <div>{state.context.floorNames[state.context.currentFloor]}</div>
+          <div>{getCurrentFloorName()}</div>
           {directionText && <div>{directionText}</div>}
         </div>
         <div className="buttons">
@@ -59,6 +70,7 @@ export default function ElevatorComponent() {
               type="button"
               className={`btn-floor ${state.context.destinyFloors.includes(0) ? "active" : ""}`}
               onClick={() => handleFloorSelection(0)}
+              disabled={getCurrentFloorIndex() === 0}
             >
               L
             </button>
@@ -69,6 +81,7 @@ export default function ElevatorComponent() {
                 type="button"
                 className={`btn-floor floor ${state.context.destinyFloors.includes(floor) ? "active" : ""}`}
                 onClick={() => handleFloorSelection(floor)}
+                disabled={getCurrentFloorIndex() === floor}
               >
                 {floor}
               </button>
