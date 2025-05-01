@@ -4,7 +4,7 @@
   display: flex;
   position: relative;
   height: 550px;
-  width: 600px;
+  width: 1000px;
   margin: 0 auto;
 }
 
@@ -256,4 +256,12 @@ button.btn-floor:disabled.active {
   height: 8px;
   margin-left: -4px;
   background: lime;
+}
+
+.sm-json {
+  text-align: left;
+  font-size: 1.25rem;
+  line-height: 1.5rem;
+  padding: 10px;
+  width: 400px;
 }

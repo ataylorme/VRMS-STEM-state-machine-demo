@@ -4,7 +4,9 @@ import ElevatorComponent from "./components/elevator";
 function App() {
   return (
     <>
-      <ElevatorComponent />
+      <div id="main">
+        <ElevatorComponent />
+      </div>
     </>
   );
 }

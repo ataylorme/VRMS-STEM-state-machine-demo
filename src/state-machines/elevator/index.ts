@@ -43,23 +43,25 @@ export const elevatorMachine = setup({
       doorWidth: ({ context }) => Math.min(34, context.doorWidth + 2),
     }),
     moveElevator: assign({
-      currentFloor: ({ context }) => {
+      currentFloor: ({ context, event }) => {
         if (context.destinyFloors.length === 0) return context.currentFloor;
 
         const targetFloor = context.destinyFloors[0];
         if (targetFloor === context.currentFloor) return context.currentFloor;
 
-        // Move towards the target floor more gradually (half the speed)
-        // Using a counter to only move every other TICK
-        if (context.moveCounter < 1) {
-          return context.currentFloor; // Don't move this tick
-        }
+        // Calculate movement based on deltaTime
+        // Moving at 1 floor per second
+        const moveSpeed = (event.type === "TICK" ? event.deltaTime : 0) / 1000;
 
+        // Determine direction and apply speed
+        const direction = context.currentFloor < targetFloor ? 1 : -1;
+        const newPosition = context.currentFloor + direction * moveSpeed;
+
+        // Return new position
         return context.currentFloor < targetFloor
-          ? context.currentFloor + 0.5 // Move at half speed up
-          : context.currentFloor - 0.5; // Move at half speed down
+          ? Math.min(newPosition, targetFloor) // Moving up
+          : Math.max(newPosition, targetFloor); // Moving down
       },
-      moveCounter: ({ context }) => (context.moveCounter + 1) % 2,
     }),
     removeCurrentFloorFromDestiny: assign({
       destinyFloors: ({ context }) =>
@@ -120,7 +122,7 @@ export const elevatorMachine = setup({
     currentFloor: 0,
     destinyFloors: [],
     doorWidth: 1, // Fully open
-    elevatorWaitingTime: 2000,
+    elevatorWaitingTime: 0,
     doorClosedWaitingTime: 500, // 500ms delay after door closes
     arrivedWaitingTime: 500, // 500ms delay after elevator stops
     floorNames: [
@@ -132,7 +134,6 @@ export const elevatorMachine = setup({
       "5th Floor",
       "6th Floor",
     ],
-    moveCounter: 0, // Counter to slow down movement
   },
   initial: "idle",
   on: {

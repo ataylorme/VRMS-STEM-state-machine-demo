@@ -59,6 +59,9 @@ export default function ElevatorComponent() {
 
   return (
     <div className="elevator-demo">
+      <div className="sm-json">
+        <pre>{JSON.stringify(state.context, null, 2)}</pre>
+      </div>
       <div className="handle">
         <div className="display">
           <div>{getCurrentFloorName()}</div>

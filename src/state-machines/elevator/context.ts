@@ -7,5 +7,4 @@ export interface ElevatorContext {
   doorClosedWaitingTime: number; // Add a delay after door closes before moving
   arrivedWaitingTime: number; // Add delay between arrival and door opening
   floorNames: string[];
-  moveCounter: number; // Added counter to control movement speed
 }
