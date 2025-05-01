@@ -7,34 +7,32 @@ Hey there, future engineers! 👋 Ever wondered how elevators know what to do? T
 Think of a state machine like a flowchart that tells something (like an elevator) what it can and can't do at any moment. It's kind of like having a set of rules for a game:
 - You can only be in one state at a time
 - You can only move between states in specific ways
-- Different thing (events) happen in different states
+- Different things (events) happen in different states
 
 ## Our Elevator Example 🏢
 
 Our elevator has these main states (situations it can be in):
 
 ### States
-1. **Idle** - The doors are open, waiting for someone to press a button
-2. **Opening** - The doors are opening up
-3. **Waiting** - The doors are open, giving people time to get in or out
-4. **Closing** - The doors are closing
-5. **Door Closed** - The doors are fully closed and checking where to go next
-6. **Moving** - Going up or down to another floor
-7. **Arrived** - Reached a floor and getting ready to open doors
+1. **Idle** - The doors are closed, waiting for someone to press a button
+2. **Waiting** - The doors are open, giving people time to get in or out
+3. **Door Closed** - The doors are closed and checking where to go next
+4. **Moving** - Going up or down to another floor
+5. **Arrived** - Just reached a floor and getting ready to let people in/out
 
 ### What the Elevator Knows (Context) 📝
 
 The elevator keeps track of:
 - Which floor it's on right now
 - Which floors it needs to visit
-- How open or closed the doors are
+- Whether the doors are open or closed
 - How long to wait with doors open
 - The names of all the floors (like "Lobby" or "2nd Floor")
 
 ### How It Works 🎮
 
 1. When you press a floor button:
-   - If the elevator is idle → It starts closing its doors
+   - If the elevator is idle → It ensures doors are closed and gets ready to move
    - If it's already moving → It adds that floor to its "to-visit" list
 
 2. The elevator is smart about visiting floors:

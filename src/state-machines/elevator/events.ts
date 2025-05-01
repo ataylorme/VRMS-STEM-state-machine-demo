@@ -1,26 +1,26 @@
-interface IncrementEvent {
+export interface IncrementEvent {
   type: "inc";
 }
-interface DecrementEvent {
+export interface DecrementEvent {
   type: "dec";
 }
-interface SelectFloorEvent {
+export interface SelectFloorEvent {
   type: "SELECT_FLOOR";
   floor: number;
 }
-interface DoorOpenedEvent {
+export interface DoorOpenedEvent {
   type: "DOOR_OPENED";
 }
-interface DoorClosedEvent {
+export interface DoorClosedEvent {
   type: "DOOR_CLOSED";
 }
-interface WaitTimeElapsedEvent {
+export interface WaitTimeElapsedEvent {
   type: "WAIT_TIME_ELAPSED";
 }
-interface FloorArrivedEvent {
+export interface FloorArrivedEvent {
   type: "FLOOR_ARRIVED";
 }
-interface TickEvent {
+export interface TickEvent {
   type: "TICK";
   deltaTime: number;
 }

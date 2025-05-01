@@ -6,22 +6,17 @@ import "./styles.css";
 // State coordinates for the diagram
 const statePositions = {
   idle: { x: 150, y: 50 },
-  opening: { x: 50, y: 150 },
-  waiting: { x: 150, y: 150 },
-  closing: { x: 250, y: 150 },
-  doorClosed: { x: 250, y: 250 },
-  moving: { x: 150, y: 250 },
+  waiting: { x: 50, y: 150 },
+  doorClosed: { x: 250, y: 150 },
+  moving: { x: 250, y: 250 },
   arrived: { x: 50, y: 250 },
 };
 
 // State descriptions for tooltips
 const stateDescriptions = {
-  idle: "Elevator is waiting for a floor selection with doors open",
-  opening: "Doors are in the process of opening",
+  idle: "Elevator is waiting for a floor selection with doors closed",
   waiting: "Doors are open, waiting for passengers",
-  closing: "Doors are in the process of closing",
-  doorClosed:
-    "Doors are fully closed. Opens if no floors to visit, otherwise starts moving",
+  doorClosed: "Doors are closed, preparing to move",
   moving: "Elevator is moving between floors",
   arrived: "Elevator has reached the target floor",
 };
@@ -38,13 +33,10 @@ function StateDiagram({ currentState }: { currentState: string }) {
       {/* Draw connections between states */}
       <g className="connections">
         <path d="M150,50 L50,150" />
-        <path d="M50,150 L150,150" />
-        <path d="M150,150 L250,150" />
+        <path d="M50,150 L250,150" />
         <path d="M250,150 L250,250" />
-        <path d="M250,250 L150,250" />
-        <path d="M150,250 L50,250" />
+        <path d="M250,250 L50,250" />
         <path d="M50,250 L50,150" />
-        {/* <path d="M250,250 Q150,200 50,150" className="transition-path" /> */}
       </g>
 
       {/* Draw state circles */}
@@ -73,18 +65,30 @@ function StateDiagram({ currentState }: { currentState: string }) {
 export default function ElevatorComponent() {
   const [state, send] = useMachine(elevatorMachine);
   const prevTimeRef = useRef(Date.now());
+  const rafRef = useRef<number | undefined>(undefined);
 
-  // Create a tick effect to simulate animation
+  // Create a tick effect using requestAnimationFrame instead of setInterval
   useEffect(() => {
-    const intervalId = setInterval(() => {
+    const animate = () => {
       const now = Date.now();
       const deltaTime = now - prevTimeRef.current;
-      prevTimeRef.current = now;
 
-      send({ type: "TICK", deltaTime });
-    }, 16); // ~60fps
+      // Only update if enough time has passed (targeting ~30fps)
+      if (deltaTime >= 33) {
+        prevTimeRef.current = now;
+        send({ type: "TICK", deltaTime });
+      }
 
-    return () => clearInterval(intervalId);
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
   }, [send]);
 
   // Floor selection handler
@@ -169,7 +173,7 @@ export default function ElevatorComponent() {
           <div className="elevator" style={getElevatorStyle()}>
             <div
               className="elevator-door"
-              style={{ width: `${state.context.doorWidth}px` }}
+              style={{ width: state.context.doorOpen ? "1px" : "34px" }}
             />
             <div className="elevator-light" />
           </div>

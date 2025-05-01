@@ -2,116 +2,120 @@ import { setup, assign } from "xstate";
 import type { ElevatorContext } from "./context";
 import type { ElevatorEvent } from "./events";
 
+// Helper functions for elevator operations
+const calculateNewPosition = (
+  currentFloor: number,
+  targetFloor: number,
+  moveSpeed: number,
+): number => {
+  const direction = currentFloor < targetFloor ? 1 : -1;
+  const newPosition = currentFloor + direction * moveSpeed;
+
+  return currentFloor < targetFloor
+    ? Math.min(newPosition, targetFloor)
+    : Math.max(newPosition, targetFloor);
+};
+
+const sortDestinyFloors = (
+  floors: number[],
+  currentFloor: number,
+  newFloor: number,
+): number[] => {
+  const goingUp = floors.length > 0 && floors[0] > currentFloor;
+  return [...floors, newFloor].sort((a, b) => (goingUp ? a - b : b - a));
+};
+
+// Constants
+const CONSTANTS = {
+  WAITING_TIME: 2000,
+  DOOR_CLOSE_DELAY: 500,
+  ARRIVAL_DELAY: 500,
+} as const;
+
+// State machine configuration
 export const elevatorMachine = setup({
-  types: {
-    context: {} as ElevatorContext,
-    events: {} as ElevatorEvent,
+  types: {} as {
+    context: ElevatorContext;
+    events: ElevatorEvent;
   },
   actions: {
-    increment: assign({
-      count: ({ context }) => context.count + 1,
+    openDoors: assign({
+      doorOpen: () => true,
     }),
-    decrement: assign({
-      count: ({ context }) => context.count - 1,
+    closeDoors: assign({
+      doorOpen: () => false,
     }),
     addDestinyFloor: assign({
       destinyFloors: ({ context, event }) => {
         if (event.type !== "SELECT_FLOOR") return context.destinyFloors;
-
-        // Only add if not already in the list and not the current floor
         if (
           context.destinyFloors.includes(event.floor) ||
           context.currentFloor === event.floor
         ) {
           return context.destinyFloors;
         }
-
-        return [...context.destinyFloors, event.floor].sort((a, b) => {
-          // Sort based on direction
-          const goingUp =
-            context.destinyFloors.length > 0 &&
-            context.destinyFloors[0] > context.currentFloor;
-
-          return goingUp ? a - b : b - a;
-        });
+        return sortDestinyFloors(
+          context.destinyFloors,
+          context.currentFloor,
+          event.floor,
+        );
       },
-    }),
-    decreaseDoorWidth: assign({
-      doorWidth: ({ context }) => Math.max(1, context.doorWidth - 2),
-    }),
-    increaseDoorWidth: assign({
-      doorWidth: ({ context }) => Math.min(34, context.doorWidth + 2),
     }),
     moveElevator: assign({
       currentFloor: ({ context, event }) => {
+        if (event.type !== "TICK") return context.currentFloor;
         if (context.destinyFloors.length === 0) return context.currentFloor;
-
         const targetFloor = context.destinyFloors[0];
         if (targetFloor === context.currentFloor) return context.currentFloor;
 
-        // Calculate movement based on deltaTime
-        // Moving at 1 floor per second
-        const moveSpeed = (event.type === "TICK" ? event.deltaTime : 0) / 1000;
-
-        // Determine direction and apply speed
-        const direction = context.currentFloor < targetFloor ? 1 : -1;
-        const newPosition = context.currentFloor + direction * moveSpeed;
-
-        // Return new position
-        return context.currentFloor < targetFloor
-          ? Math.min(newPosition, targetFloor) // Moving up
-          : Math.max(newPosition, targetFloor); // Moving down
+        const moveSpeed = event.deltaTime / 1000;
+        return calculateNewPosition(
+          context.currentFloor,
+          targetFloor,
+          moveSpeed,
+        );
       },
     }),
     removeCurrentFloorFromDestiny: assign({
       destinyFloors: ({ context }) =>
-        context.destinyFloors.filter((floor) => floor !== context.currentFloor),
+        context.destinyFloors.filter(
+          (floor: number) => floor !== context.currentFloor,
+        ),
     }),
     decreaseWaitingTime: assign({
-      elevatorWaitingTime: ({ context, event }) =>
-        event.type === "TICK"
-          ? Math.max(0, context.elevatorWaitingTime - event.deltaTime)
-          : context.elevatorWaitingTime,
+      elevatorWaitingTime: ({ context, event }) => {
+        if (event.type !== "TICK") return context.elevatorWaitingTime;
+        return Math.max(0, context.elevatorWaitingTime - event.deltaTime);
+      },
     }),
     resetWaitingTime: assign({
-      elevatorWaitingTime: () => 2000,
-    }),
-    resetDoorStateOnIdle: assign({
-      doorWidth: () => 1, // Fully open when idle
-    }),
-    ensureClosedDoors: assign({
-      doorWidth: () => 34, // Ensure doors are fully closed when moving
-    }),
-    resetDoorClosedWaitingTime: assign({
-      doorClosedWaitingTime: () => 500, // 500ms delay after door closes before moving
+      elevatorWaitingTime: () => CONSTANTS.WAITING_TIME,
     }),
     decreaseDoorClosedWaitingTime: assign({
-      doorClosedWaitingTime: ({ context, event }) =>
-        event.type === "TICK"
-          ? Math.max(0, context.doorClosedWaitingTime - event.deltaTime)
-          : context.doorClosedWaitingTime,
+      doorClosedWaitingTime: ({ context, event }) => {
+        if (event.type !== "TICK") return context.doorClosedWaitingTime;
+        return Math.max(0, context.doorClosedWaitingTime - event.deltaTime);
+      },
     }),
-    resetArrivedWaitingTime: assign({
-      arrivedWaitingTime: () => 500, // 500ms delay after elevator arrives before opening door
+    resetDoorClosedWaitingTime: assign({
+      doorClosedWaitingTime: () => CONSTANTS.DOOR_CLOSE_DELAY,
     }),
     decreaseArrivedWaitingTime: assign({
-      arrivedWaitingTime: ({ context, event }) =>
-        event.type === "TICK"
-          ? Math.max(0, context.arrivedWaitingTime - event.deltaTime)
-          : context.arrivedWaitingTime,
+      arrivedWaitingTime: ({ context, event }) => {
+        if (event.type !== "TICK") return context.arrivedWaitingTime;
+        return Math.max(0, context.arrivedWaitingTime - event.deltaTime);
+      },
+    }),
+    resetArrivedWaitingTime: assign({
+      arrivedWaitingTime: () => CONSTANTS.ARRIVAL_DELAY,
     }),
   },
   guards: {
-    isDoorFullyOpen: ({ context }) => context.doorWidth <= 1,
-    isDoorFullyClosed: ({ context }) => context.doorWidth >= 34,
     hasDestinyFloors: ({ context }) => context.destinyFloors.length > 0,
     hasNoDestinyFloors: ({ context }) => context.destinyFloors.length === 0,
-    hasReachedTargetFloor: ({ context }) => {
-      return (
-        context.destinyFloors.length > 0 &&
-        context.currentFloor === context.destinyFloors[0]
-      );
-    },
+    hasReachedTargetFloor: ({ context }) =>
+      context.destinyFloors.length > 0 &&
+      context.currentFloor === context.destinyFloors[0],
     isWaitTimeElapsed: ({ context }) => context.elevatorWaitingTime <= 0,
     isDoorClosedWaitTimeElapsed: ({ context }) =>
       context.doorClosedWaitingTime <= 0,
@@ -122,10 +126,10 @@ export const elevatorMachine = setup({
     count: 0,
     currentFloor: 0,
     destinyFloors: [],
-    doorWidth: 1, // Fully open
-    elevatorWaitingTime: 2000,
-    doorClosedWaitingTime: 500, // 500ms delay after door closes
-    arrivedWaitingTime: 500, // 500ms delay after elevator stops
+    doorOpen: false,
+    elevatorWaitingTime: CONSTANTS.WAITING_TIME,
+    doorClosedWaitingTime: CONSTANTS.DOOR_CLOSE_DELAY,
+    arrivedWaitingTime: CONSTANTS.ARRIVAL_DELAY,
     floorNames: [
       "Lobby",
       "1st Floor",
@@ -138,84 +142,48 @@ export const elevatorMachine = setup({
   },
   initial: "idle",
   on: {
-    inc: { actions: "increment" },
-    dec: { actions: "decrement" },
     SELECT_FLOOR: {
-      actions: "addDestinyFloor",
-      target: ".closing",
-    },
-    TICK: {
-      actions: "decreaseWaitingTime",
+      target: ".doorClosed",
+      actions: ["addDestinyFloor", "closeDoors"],
     },
   },
   states: {
+    // Elevator is waiting with doors closed
     idle: {
-      entry: "resetDoorStateOnIdle",
+      entry: "closeDoors",
       on: {
         SELECT_FLOOR: {
-          target: "closing",
-          actions: "addDestinyFloor",
+          target: "doorClosed",
+          actions: ["addDestinyFloor", "closeDoors"],
         },
       },
     },
-    opening: {
-      on: {
-        TICK: {
-          actions: "decreaseDoorWidth",
-        },
-      },
-      always: [
-        {
-          guard: "isDoorFullyOpen",
-          target: "waiting",
-          actions: "resetWaitingTime",
-        },
-      ],
-    },
+    // Doors are open, waiting for passengers
     waiting: {
+      entry: ["openDoors", "resetWaitingTime"],
       on: {
-        TICK: {
-          actions: "decreaseWaitingTime",
-        },
-        SELECT_FLOOR: {
-          actions: "addDestinyFloor",
-        },
+        TICK: { actions: "decreaseWaitingTime" },
+        SELECT_FLOOR: { actions: "addDestinyFloor" },
       },
       always: [
         {
           guard: "isWaitTimeElapsed",
-          target: "closing",
-        },
-      ],
-    },
-    closing: {
-      on: {
-        TICK: {
-          actions: "increaseDoorWidth",
-        },
-      },
-      always: [
-        {
-          guard: "isDoorFullyClosed",
           target: "doorClosed",
-          actions: ["ensureClosedDoors", "resetDoorClosedWaitingTime"],
+          actions: "closeDoors",
         },
       ],
     },
+    // Doors are fully closed, preparing to move
     doorClosed: {
-      // New state to ensure a visual delay after doors close
+      entry: ["closeDoors", "resetDoorClosedWaitingTime"],
       on: {
-        TICK: {
-          actions: "decreaseDoorClosedWaitingTime",
-        },
-        SELECT_FLOOR: {
-          actions: "addDestinyFloor",
-        },
+        TICK: { actions: "decreaseDoorClosedWaitingTime" },
+        SELECT_FLOOR: { actions: "addDestinyFloor" },
       },
       always: [
         {
           guard: "hasNoDestinyFloors",
-          target: "waiting",
+          target: "idle",
         },
         {
           guards: ["isDoorClosedWaitTimeElapsed", "hasDestinyFloors"],
@@ -223,15 +191,12 @@ export const elevatorMachine = setup({
         },
       ],
     },
+    // Elevator is moving between floors
     moving: {
-      entry: "ensureClosedDoors", // Double-ensure doors are closed when entering
+      entry: "closeDoors",
       on: {
-        TICK: {
-          actions: "moveElevator",
-        },
-        SELECT_FLOOR: {
-          actions: "addDestinyFloor",
-        },
+        TICK: { actions: "moveElevator" },
+        SELECT_FLOOR: { actions: "addDestinyFloor" },
       },
       always: [
         {
@@ -241,20 +206,16 @@ export const elevatorMachine = setup({
         },
       ],
     },
+    // Elevator has reached destination floor
     arrived: {
-      // New state to wait after arriving before opening doors
       on: {
-        TICK: {
-          actions: "decreaseArrivedWaitingTime",
-        },
-        SELECT_FLOOR: {
-          actions: "addDestinyFloor",
-        },
+        TICK: { actions: "decreaseArrivedWaitingTime" },
+        SELECT_FLOOR: { actions: "addDestinyFloor" },
       },
       always: [
         {
           guard: "isArrivedWaitTimeElapsed",
-          target: "opening",
+          target: "waiting",
         },
       ],
     },
