@@ -3,6 +3,73 @@ import { elevatorMachine } from "../../state-machines/elevator";
 import { useEffect, useRef } from "react";
 import "./styles.css";
 
+// State coordinates for the diagram
+const statePositions = {
+  idle: { x: 150, y: 50 },
+  opening: { x: 50, y: 150 },
+  waiting: { x: 150, y: 150 },
+  closing: { x: 250, y: 150 },
+  doorClosed: { x: 250, y: 250 },
+  moving: { x: 150, y: 250 },
+  arrived: { x: 50, y: 250 },
+};
+
+// State descriptions for tooltips
+const stateDescriptions = {
+  idle: "Elevator is waiting for a floor selection with doors open",
+  opening: "Doors are in the process of opening",
+  waiting: "Doors are open, waiting for passengers",
+  closing: "Doors are in the process of closing",
+  doorClosed:
+    "Doors are fully closed. Opens if no floors to visit, otherwise starts moving",
+  moving: "Elevator is moving between floors",
+  arrived: "Elevator has reached the target floor",
+};
+
+function StateDiagram({ currentState }: { currentState: string }) {
+  return (
+    <svg
+      width="600"
+      height="600"
+      className="state-diagram"
+      aria-label="Elevator State Machine Diagram"
+      role="img"
+    >
+      {/* Draw connections between states */}
+      <g className="connections">
+        <path d="M150,50 L50,150" />
+        <path d="M50,150 L150,150" />
+        <path d="M150,150 L250,150" />
+        <path d="M250,150 L250,250" />
+        <path d="M250,250 L150,250" />
+        <path d="M150,250 L50,250" />
+        <path d="M50,250 L50,150" />
+        {/* <path d="M250,250 Q150,200 50,150" className="transition-path" /> */}
+      </g>
+
+      {/* Draw state circles */}
+      {Object.entries(statePositions).map(([state, pos]) => (
+        <g
+          key={state}
+          transform={`translate(${pos.x},${pos.y})`}
+          className="state-group"
+        >
+          <title>
+            {stateDescriptions[state as keyof typeof stateDescriptions]}
+          </title>
+          <circle
+            r="20"
+            className={`state-node ${currentState === state ? "active" : ""}`}
+          />
+          <text dy=".3em" textAnchor="middle" className="state-label">
+            {state}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export default function ElevatorComponent() {
   const [state, send] = useMachine(elevatorMachine);
   const prevTimeRef = useRef(Date.now());
@@ -61,6 +128,10 @@ export default function ElevatorComponent() {
     <div className="elevator-demo">
       <div className="sm-json">
         <pre>{JSON.stringify(state.context, null, 2)}</pre>
+        <div className="state-diagram-container">
+          <h3>State Machine Diagram</h3>
+          <StateDiagram currentState={state.value as string} />
+        </div>
       </div>
       <div className="handle">
         <div className="display">

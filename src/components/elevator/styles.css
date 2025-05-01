@@ -4,7 +4,7 @@
   display: flex;
   position: relative;
   height: 550px;
-  width: 1000px;
+  width: 1450px;
   margin: 0 auto;
 }
 
@@ -263,5 +263,100 @@ button.btn-floor:disabled.active {
   font-size: 1.25rem;
   line-height: 1.5rem;
   padding: 10px;
-  width: 400px;
+  width: 850px;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  height: 100%;
+}
+
+.sm-json pre {
+  width: 470px;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.state-diagram-container {
+  width: 350px;
+  height: 350px;
+  margin-top: 20px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.state-diagram-container h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+}
+
+.state-diagram {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.state-diagram .connections path {
+  fill: none;
+  stroke: #666;
+  stroke-width: 2;
+  transition: stroke 0.3s ease;
+}
+
+.state-diagram .connections path.transition-path {
+  stroke-dasharray: 4;
+  animation: dash 1s linear infinite;
+}
+
+.state-diagram .state-group {
+  cursor: help;
+}
+
+.state-diagram .state-group:hover .state-node {
+  fill: #64B5F6;
+  stroke: #2196F3;
+}
+
+.state-diagram .state-node {
+  fill: #444;
+  stroke: #666;
+  stroke-width: 2;
+  transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.state-diagram .state-node.active {
+  fill: #4CAF50;
+  stroke: #81C784;
+  animation: pulse 2s infinite;
+}
+
+.state-diagram .state-label {
+  fill: white;
+  font-size: 10px;
+  pointer-events: none;
+  text-transform: capitalize;
+}
+
+@keyframes pulse {
+  0% {
+    stroke-width: 2;
+  }
+
+  50% {
+    stroke-width: 4;
+  }
+
+  100% {
+    stroke-width: 2;
+  }
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -8;
+  }
 }

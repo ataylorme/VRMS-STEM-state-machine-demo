@@ -105,6 +105,7 @@ export const elevatorMachine = setup({
     isDoorFullyOpen: ({ context }) => context.doorWidth <= 1,
     isDoorFullyClosed: ({ context }) => context.doorWidth >= 34,
     hasDestinyFloors: ({ context }) => context.destinyFloors.length > 0,
+    hasNoDestinyFloors: ({ context }) => context.destinyFloors.length === 0,
     hasReachedTargetFloor: ({ context }) => {
       return (
         context.destinyFloors.length > 0 &&
@@ -122,7 +123,7 @@ export const elevatorMachine = setup({
     currentFloor: 0,
     destinyFloors: [],
     doorWidth: 1, // Fully open
-    elevatorWaitingTime: 0,
+    elevatorWaitingTime: 2000,
     doorClosedWaitingTime: 500, // 500ms delay after door closes
     arrivedWaitingTime: 500, // 500ms delay after elevator stops
     floorNames: [
@@ -213,7 +214,11 @@ export const elevatorMachine = setup({
       },
       always: [
         {
-          guard: "isDoorClosedWaitTimeElapsed",
+          guard: "hasNoDestinyFloors",
+          target: "waiting",
+        },
+        {
+          guards: ["isDoorClosedWaitTimeElapsed", "hasDestinyFloors"],
           target: "moving",
         },
       ],
