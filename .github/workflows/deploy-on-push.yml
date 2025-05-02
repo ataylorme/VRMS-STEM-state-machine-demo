@@ -1,0 +1,31 @@
+name: Deploy on Push
+permissions:
+  contents: read
+  id-token: write
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::963564733329:role/S3-VRMS-STEM-GitHub-Actions
+      - name: S3 Sync
+        shell: bash
+        run: aws s3 sync --sse --delete . "$S3_BUCKET"
+        working-directory: ./www
+        env:
+          S3_BUCKET: "s3://vrms-stem-state-machine-demo"
+      - name: Amplify deploy
+        shell: bash
+        run: aws amplify start-deployment --region us-west-2 --app-id $AMPLIFY_APP_ID --branch-name main --source-url-type=BUCKET_PREFIX --source-url "$S3_BUCKET/" > /dev/null 2>&1
+        env:
+          AMPLIFY_APP_ID: dscq6w6c8mjmy
+          S3_BUCKET: "s3://vrms-stem-state-machine-demo"
