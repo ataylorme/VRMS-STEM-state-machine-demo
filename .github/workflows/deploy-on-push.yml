@@ -33,7 +33,7 @@ jobs:
           S3_BUCKET: "s3://vrms-stem-state-machine-demo"
       - name: Amplify deploy
         shell: bash
-        run: aws amplify start-deployment --region us-west-2 --app-id $AMPLIFY_APP_ID --branch-name main --source-url-type=BUCKET_PREFIX --source-url "$S3_BUCKET/"
+        run: aws amplify start-deployment --region us-west-2 --app-id $AMPLIFY_APP_ID --branch-name staging --source-url-type=BUCKET_PREFIX --source-url "$S3_BUCKET/" > /dev/null 2>&1
         env:
           AMPLIFY_APP_ID: d2lo00my78y8b7
           S3_BUCKET: "s3://vrms-stem-state-machine-demo"
