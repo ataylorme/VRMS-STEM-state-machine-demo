@@ -24,8 +24,8 @@ const stateDescriptions = {
 function StateDiagram({ currentState }: { currentState: string }) {
   return (
     <svg
-      width="600"
-      height="600"
+      width="350"
+      height="350"
       className="state-diagram"
       aria-label="Elevator State Machine Diagram"
       role="img"
@@ -50,7 +50,7 @@ function StateDiagram({ currentState }: { currentState: string }) {
             {stateDescriptions[state as keyof typeof stateDescriptions]}
           </title>
           <circle
-            r="20"
+            r="35"
             className={`state-node ${currentState === state ? "active" : ""}`}
           />
           <text dy=".3em" textAnchor="middle" className="state-label">
