@@ -1,6 +1,6 @@
 import { useMachine } from "@xstate/react";
-import { elevatorMachine } from "../../state-machines/elevator";
 import { useEffect, useRef } from "react";
+import { elevatorMachine } from "../../state-machines/elevator";
 import "./styles.css";
 
 // State coordinates for the diagram

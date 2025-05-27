@@ -1,4 +1,4 @@
-import { setup, assign } from "xstate";
+import { assign, setup } from "xstate";
 import type { ElevatorContext } from "./context";
 import type { ElevatorEvent } from "./events";
 

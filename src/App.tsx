@@ -1,12 +1,19 @@
 import "./App.css";
+import { useState } from "react";
 import ElevatorComponent from "./components/elevator";
+import WhatAreStateMachines from "./components/what-are-state-machines/index.tsx";
 
 function App() {
+  const [showDemo, setShowDemo] = useState(false);
   return (
     <>
-      <div id="main">
-        <ElevatorComponent />
-      </div>
+      {showDemo ? (
+        <div id="main">
+          <ElevatorComponent />
+        </div>
+      ) : (
+        <WhatAreStateMachines setShowDemo={setShowDemo} />
+      )}
     </>
   );
 }

@@ -4,7 +4,7 @@ export interface ElevatorContext {
   destinyFloors: number[];
   doorOpen: boolean;
   elevatorWaitingTime: number;
-  doorClosedWaitingTime: number; // Add a delay after door closes before moving
-  arrivedWaitingTime: number; // Add delay between arrival and door opening
+  doorClosedWaitingTime: number;
+  arrivedWaitingTime: number;
   floorNames: string[];
 }
